@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, CheckCircle, Clock, AlertTriangle, AlertCircle, Wifi, WifiOff } from 'lucide-react';
+import { Plus, CheckCircle, Clock, AlertTriangle, AlertCircle, TrendingUp, Target, Calendar } from 'lucide-react';
 import { Header } from '../components/Layout/Header';
 import { TaskForm } from '../components/Tasks/TaskForm';
 import { TaskItem } from '../components/Tasks/TaskItem';
@@ -69,8 +69,8 @@ export function Dashboard() {
               <p className="text-muted-foreground">A carregar as suas tarefas...</p>
               
               {/* Informação de Debug Melhorada */}
-              <div className="mt-6 p-4 bg-muted rounded-lg text-sm text-left max-w-lg">
-                <h4 className="font-semibold mb-3 flex items-center gap-2">
+              <div className="mt-6 p-4 bg-muted/50 backdrop-blur-sm rounded-xl text-sm text-left max-w-lg border border-border/50">
+                <h4 className="font-semibold mb-3 flex items-center gap-2 text-primary">
                   <AlertCircle className="h-4 w-4" />
                   Estado de Debug
                 </h4>
@@ -78,30 +78,30 @@ export function Dashboard() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     {currentUser ? (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <CheckCircle className="h-4 w-4 text-secondary" />
                     ) : (
-                      <AlertCircle className="h-4 w-4 text-red-500" />
+                      <AlertCircle className="h-4 w-4 text-destructive" />
                     )}
                     <span>Utilizador: {currentUser?.email || 'Não autenticado'}</span>
                   </div>
                   
                   <div className="flex items-center gap-2">
                     {currentUser?.uid ? (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <CheckCircle className="h-4 w-4 text-secondary" />
                     ) : (
-                      <AlertCircle className="h-4 w-4 text-red-500" />
+                      <AlertCircle className="h-4 w-4 text-destructive" />
                     )}
                     <span>UID: {currentUser?.uid || 'N/A'}</span>
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <Wifi className="h-4 w-4 text-blue-500" />
+                    <Clock className="h-4 w-4 text-primary" />
                     <span>Conexão Firestore: A tentar conectar...</span>
                   </div>
                 </div>
                 
-                <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800">
-                  <p className="text-red-600 dark:text-red-400 text-xs font-medium">
+                <div className="mt-4 p-3 bg-destructive/10 rounded-lg border border-destructive/20">
+                  <p className="text-destructive text-xs font-medium">
                     ⚠️ Se isto não carregar, as regras do Firestore precisam de ser configuradas!
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -121,55 +121,100 @@ export function Dashboard() {
       <Header />
       
       <main className="container mx-auto px-4 py-6">
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            Bem-vindo de volta! 👋
+          </h1>
+          <p className="text-muted-foreground">
+            Aqui está um resumo das suas tarefas hoje
+          </p>
+        </div>
+
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <Card className="border-l-4 border-l-primary bg-gradient-to-r from-primary/5 to-transparent">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total de Tarefas</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              <Target className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{taskCounts.all}</div>
+              <div className="text-2xl font-bold text-primary">{taskCounts.all}</div>
+              <p className="text-xs text-muted-foreground">
+                {taskCounts.completed} concluídas
+              </p>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="border-l-4 border-l-secondary bg-gradient-to-r from-secondary/5 to-transparent">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Por Fazer</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
+              <Clock className="h-4 w-4 text-secondary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{taskCounts.active}</div>
+              <div className="text-2xl font-bold text-secondary">{taskCounts.active}</div>
+              <p className="text-xs text-muted-foreground">
+                Tarefas pendentes
+              </p>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-transparent dark:from-blue-900/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Para Hoje</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+              <Calendar className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{todayTasks}</div>
+              <div className="text-2xl font-bold text-blue-600">{todayTasks}</div>
+              <p className="text-xs text-muted-foreground">
+                Tarefas agendadas
+              </p>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="border-l-4 border-l-destructive bg-gradient-to-r from-destructive/5 to-transparent">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Atrasadas</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-red-500" />
+              <AlertTriangle className="h-4 w-4 text-destructive" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{overdueTasks}</div>
+              <div className="text-2xl font-bold text-destructive">{overdueTasks}</div>
+              <p className="text-xs text-muted-foreground">
+                Precisam atenção
+              </p>
             </CardContent>
           </Card>
         </div>
+
+        {/* Progress Overview */}
+        {taskCounts.all > 0 && (
+          <Card className="mb-6 bg-gradient-to-r from-accent/20 to-transparent">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-secondary" />
+                  Progresso Geral
+                </h3>
+                <span className="text-sm text-muted-foreground">
+                  {Math.round((taskCounts.completed / taskCounts.all) * 100)}%
+                </span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-2">
+                <div 
+                  className="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${(taskCounts.completed / taskCounts.all) * 100}%` }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Add Task Button */}
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">As Minhas Tarefas</h2>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="shadow-soft">
                 <Plus className="mr-2 h-4 w-4" />
                 Nova Tarefa
               </Button>
@@ -195,20 +240,20 @@ export function Dashboard() {
         {/* Tasks List */}
         <div className="space-y-3 mt-6">
           {tasks.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <CheckCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">Nenhuma tarefa encontrada</h3>
-                <p className="text-muted-foreground mb-4">
+            <Card className="text-center py-12 bg-gradient-to-br from-accent/10 to-transparent">
+              <CardContent>
+                <CheckCircle className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+                <h3 className="text-xl font-semibold mb-2">Nenhuma tarefa encontrada</h3>
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                   {filter === 'all' 
-                    ? 'Comece por adicionar a sua primeira tarefa!'
+                    ? 'Comece por adicionar a sua primeira tarefa e organize o seu dia de forma eficiente!'
                     : `Não há tarefas ${filter === 'active' ? 'por fazer' : 'concluídas'}.`
                   }
                 </p>
                 {filter === 'all' && (
                   <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button>
+                      <Button size="lg" className="shadow-soft">
                         <Plus className="mr-2 h-4 w-4" />
                         Adicionar Primeira Tarefa
                       </Button>
@@ -218,15 +263,18 @@ export function Dashboard() {
               </CardContent>
             </Card>
           ) : (
-            tasks.map(task => (
-              <TaskItem
-                key={task.id}
-                task={task}
-                onToggle={toggleTask}
-                onUpdate={updateTask}
-                onDelete={deleteTask}
-              />
-            ))
+            <div className="space-y-3">
+              {tasks.map(task => (
+                <div key={task.id} className="animate-slide-up">
+                  <TaskItem
+                    task={task}
+                    onToggle={toggleTask}
+                    onUpdate={updateTask}
+                    onDelete={deleteTask}
+                  />
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </main>
