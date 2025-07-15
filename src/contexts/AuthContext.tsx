@@ -45,7 +45,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    console.log('AuthContext: Setting up auth state listener');
     const unsubscribe = onAuthStateChanged(auth, (user: FirebaseUser | null) => {
+      console.log('AuthContext: Auth state changed', user ? 'User logged in' : 'User logged out');
       if (user) {
         setCurrentUser({
           uid: user.uid,
@@ -69,9 +71,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading
   };
 
+  console.log('AuthContext: Current state', { currentUser: !!currentUser, loading });
+
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 }
