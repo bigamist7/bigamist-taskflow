@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MessageCircle, X, Send } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -197,35 +198,37 @@ export function ChatbotWidget() {
             </div>
           </CardHeader>
           
-          <CardContent className="flex flex-col flex-1 p-4 pt-0">
-            <div className="flex-1 overflow-y-auto space-y-3 mb-3 pr-2">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}
-                >
+          <CardContent className="flex flex-col flex-1 p-4 pt-0 overflow-hidden">
+            <ScrollArea className="flex-1 mb-3">
+              <div className="space-y-3 pr-2">
+                {messages.map((message) => (
                   <div
-                    className={`max-w-[80%] p-2 rounded-lg text-sm ${
-                      message.isBot
-                        ? 'bg-muted text-muted-foreground'
-                        : 'bg-primary text-primary-foreground'
-                    }`}
+                    key={message.id}
+                    className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}
                   >
-                    {message.text}
+                    <div
+                      className={`max-w-[80%] p-2 rounded-lg text-sm break-words ${
+                        message.isBot
+                          ? 'bg-muted text-muted-foreground'
+                          : 'bg-primary text-primary-foreground'
+                      }`}
+                    >
+                      {message.text}
+                    </div>
                   </div>
-                </div>
-              ))}
-              
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-muted text-muted-foreground p-2 rounded-lg text-sm">
-                    <div className="animate-pulse">A pensar...</div>
+                ))}
+                
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-muted text-muted-foreground p-2 rounded-lg text-sm">
+                      <div className="animate-pulse">A pensar...</div>
+                    </div>
                   </div>
-                </div>
-              )}
-              
-              <div ref={messagesEndRef} />
-            </div>
+                )}
+                
+                <div ref={messagesEndRef} />
+              </div>
+            </ScrollArea>
             
             <div className="flex gap-2 flex-shrink-0">
               <Input
