@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,9 +16,10 @@ interface TaskFormProps {
   onSubmit: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => Promise<void>;
   initialData?: Partial<Task>;
   submitLabel?: string;
+  onCancel?: () => void;
 }
 
-export function TaskForm({ onSubmit, initialData, submitLabel = 'Adicionar Tarefa' }: TaskFormProps) {
+export function TaskForm({ onSubmit, initialData, submitLabel = 'Adicionar Tarefa', onCancel }: TaskFormProps) {
   const [title, setTitle] = useState(initialData?.title || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [priority, setPriority] = useState<TaskPriority>(initialData?.priority || 'media');
@@ -133,10 +133,17 @@ export function TaskForm({ onSubmit, initialData, submitLabel = 'Adicionar Taref
         </Popover>
       </div>
 
-      <Button type="submit" className="w-full" disabled={loading || !title.trim()}>
-        {loading ? 'A guardar...' : submitLabel}
-        {!initialData && <Plus className="ml-2 h-4 w-4" />}
-      </Button>
+      <div className="flex gap-2">
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+            Cancelar
+          </Button>
+        )}
+        <Button type="submit" className="flex-1" disabled={loading || !title.trim()}>
+          {loading ? 'A guardar...' : submitLabel}
+          {!initialData && <Plus className="ml-2 h-4 w-4" />}
+        </Button>
+      </div>
     </form>
   );
 }
