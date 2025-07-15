@@ -148,7 +148,7 @@ export function Dashboard() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-cyan-50 dark:from-blue-950 dark:via-green-950 dark:to-cyan-950">
       <Header />
       
-      <main className="container mx-auto px-4 py-8 max-w-7xl">
+      <main className="container mx-auto px-8 py-8 max-w-7xl">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="glass-effect border-blue-200/50 dark:border-blue-800/50 hover:shadow-lg transition-all duration-300 hover:scale-105">
