@@ -1,9 +1,9 @@
+
 import { useState, useEffect } from 'react';
 import { 
   collection, 
   query, 
   where, 
-  orderBy, 
   onSnapshot,
   addDoc,
   updateDoc,
@@ -39,10 +39,10 @@ export function useTasks() {
 
     console.log('🔗 useTasks: Setting up Firestore listener for user:', currentUser.uid);
 
+    // Simplified query without orderBy to avoid index requirement
     const q = query(
       collection(db, 'tasks'),
-      where('userId', '==', currentUser.uid),
-      orderBy('createdAt', 'desc')
+      where('userId', '==', currentUser.uid)
     );
 
     const unsubscribe = onSnapshot(q, 
@@ -84,7 +84,8 @@ export function useTasks() {
           toast.error('❌ Erro de permissões no Firestore. Verifique as regras de segurança.');
           console.log('🚫 FIRESTORE RULES PROBLEM: As regras do Firestore não permitem acesso aos dados');
         } else if (error.code === 'failed-precondition') {
-          toast.error('❌ Firestore: Índice em falta ou configuração incorreta.');
+          toast.error('❌ Firestore: Índice em falta. A tentar query simplificada...');
+          console.log('📇 INDEX MISSING: Firestore needs a composite index for this query');
         } else {
           toast.error('❌ Erro ao carregar tarefas: ' + error.message);
         }
@@ -180,6 +181,7 @@ export function useTasks() {
     }
   });
 
+  // Client-side sorting since we removed orderBy from Firestore query
   const sortedTasks = [...filteredTasks].sort((a, b) => {
     switch (sort) {
       case 'priority':
