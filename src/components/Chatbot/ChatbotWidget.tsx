@@ -187,7 +187,9 @@ export function ChatbotWidget() {
     } catch (error) {
       console.error('❌ Erro do provedor de IA:', error);
       
-      // Fallback para respostas locais
+      // Fallback para respostas locais sempre que há erro
+      const lowerMessage = message.toLowerCase();
+      
       const responseMap = {
         organizar: 'Recomendo organizar as suas tarefas por prioridade! Use as etiquetas "Alta", "Média" e "Baixa" e defina datas limite para as mais importantes.',
         prioridade: 'Para definir prioridades, clique numa tarefa e seleccione entre "Alta", "Média" ou "Baixa" prioridade.',
@@ -199,8 +201,6 @@ export function ChatbotWidget() {
         olá: 'Olá! Como posso ajudá-lo hoje com as suas tarefas?',
         obrigado: 'De nada! Estou aqui para ajudar sempre que precisar.',
       };
-
-      const lowerMessage = message.toLowerCase();
       
       for (const [keyword, response] of Object.entries(responseMap)) {
         if (lowerMessage.includes(keyword)) {
@@ -252,12 +252,6 @@ export function ChatbotWidget() {
         provider: 'local',
       };
       setMessages(prev => [...prev, errorResponse]);
-      
-      toast({
-        title: "Erro",
-        description: "Não foi possível enviar a mensagem. Tente novamente.",
-        variant: "destructive",
-      });
     } finally {
       setIsLoading(false);
     }
