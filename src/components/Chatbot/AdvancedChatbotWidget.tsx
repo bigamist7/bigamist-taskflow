@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,7 +40,6 @@ export function AdvancedChatbotWidget() {
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  // Local responses (existing logic)
   const localResponses = {
     organizar: 'Recomendo organizar as suas tarefas por prioridade! Use as etiquetas "Alta", "Média" e "Baixa" e defina datas limite.',
     filtros: 'Pode filtrar as suas tarefas por: "Todas", "Por Fazer" ou "Concluídas". Use também a ordenação por data ou prioridade.',
@@ -150,7 +148,9 @@ export function AdvancedChatbotWidget() {
     });
 
     if (!response.ok) {
-      throw new Error(`Erro Perplexity: ${response.status}`);
+      const errorData = await response.json().catch(() => null);
+      console.error('Perplexity API Error:', errorData);
+      throw new Error(`Erro Perplexity: ${response.status} - ${errorData?.error?.message || 'Erro desconhecido'}`);
     }
 
     const data = await response.json();
@@ -252,7 +252,6 @@ export function AdvancedChatbotWidget() {
     });
   };
 
-  // Load saved keys on mount
   useEffect(() => {
     const savedOpenAI = localStorage.getItem('openai_key');
     const savedPerplexity = localStorage.getItem('perplexity_key');
