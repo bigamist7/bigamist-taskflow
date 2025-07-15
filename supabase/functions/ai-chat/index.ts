@@ -22,7 +22,7 @@ serve(async (req) => {
     let responseText;
 
     if (provider === 'openai') {
-      const openaiKey = Deno.env.get('OPENAI_API_KEY');
+      const openaiKey = Deno.env.get('OPENAI_API_KEY2');
       if (!openaiKey) {
         throw new Error('OpenAI API key not configured');
       }
@@ -58,7 +58,7 @@ serve(async (req) => {
       responseText = data.choices[0]?.message?.content || 'Desculpe, não consegui gerar uma resposta.';
 
     } else if (provider === 'perplexity') {
-      const perplexityKey = Deno.env.get('PERPLEXITY_API_KEY');
+      const perplexityKey = Deno.env.get('PERPLEXITY_API_KEY2');
       if (!perplexityKey) {
         throw new Error('Perplexity API key not configured');
       }
