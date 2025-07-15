@@ -3,16 +3,18 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+import { Plus, CheckCircle, Clock, AlertTriangle, AlertCircle } from 'lucide-react';
 import { Header } from '../components/Layout/Header';
 import { TaskForm } from '../components/Tasks/TaskForm';
 import { TaskItem } from '../components/Tasks/TaskItem';
 import { TaskFilters } from '../components/Tasks/TaskFilters';
 import { ChatbotWidget } from '../components/Chatbot/ChatbotWidget';
 import { useTasks } from '../hooks/useTasks';
+import { useAuth } from '../contexts/AuthContext';
 
 export function Dashboard() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const { currentUser } = useAuth();
   const {
     tasks,
     loading,
@@ -25,6 +27,13 @@ export function Dashboard() {
     deleteTask,
     toggleTask
   } = useTasks();
+
+  console.log('Dashboard: Render state', { 
+    loading, 
+    tasksCount: tasks.length, 
+    currentUser: !!currentUser,
+    uid: currentUser?.uid 
+  });
 
   const taskCounts = {
     all: tasks.length,
@@ -56,6 +65,22 @@ export function Dashboard() {
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
               <p className="text-muted-foreground">A carregar as suas tarefas...</p>
+              
+              {/* Debug information */}
+              <div className="mt-4 p-4 bg-muted rounded-lg text-sm text-left max-w-md">
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  Informações de Debug
+                </h4>
+                <p>Utilizador: {currentUser?.email}</p>
+                <p>UID: {currentUser?.uid}</p>
+                <p className="text-red-600 mt-2">
+                  Se isto não carregar, provavelmente as regras do Firestore precisam de ser configuradas.
+                </p>
+                <p className="text-xs mt-2 text-muted-foreground">
+                  Verifique o console do navegador para mais detalhes.
+                </p>
+              </div>
             </div>
           </div>
         </div>

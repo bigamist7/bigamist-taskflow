@@ -25,11 +25,16 @@ export function useTasks() {
   const { currentUser } = useAuth();
 
   useEffect(() => {
+    console.log('useTasks: useEffect triggered', { currentUser: !!currentUser, uid: currentUser?.uid });
+    
     if (!currentUser) {
+      console.log('useTasks: No current user, clearing tasks');
       setTasks([]);
       setLoading(false);
       return;
     }
+
+    console.log('useTasks: Setting up Firestore listener for user:', currentUser.uid);
 
     const q = query(
       collection(db, 'tasks'),
@@ -37,18 +42,37 @@ export function useTasks() {
       orderBy('createdAt', 'desc')
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const tasksData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-        dueDate: doc.data().dueDate?.toDate() || undefined,
-      })) as Task[];
-      
-      setTasks(tasksData);
-      setLoading(false);
-    });
+    const unsubscribe = onSnapshot(q, 
+      (snapshot) => {
+        console.log('useTasks: Firestore snapshot received, docs count:', snapshot.docs.length);
+        
+        const tasksData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate() || new Date(),
+          updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+          dueDate: doc.data().dueDate?.toDate() || undefined,
+        })) as Task[];
+        
+        console.log('useTasks: Processed tasks:', tasksData);
+        setTasks(tasksData);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('useTasks: Firestore error:', error);
+        console.error('useTasks: Error code:', error.code);
+        console.error('useTasks: Error message:', error.message);
+        
+        if (error.code === 'permission-denied') {
+          toast.error('Erro de permissões. Verifique as regras do Firestore.');
+          console.log('useTasks: Permission denied - Firestore rules need to be configured');
+        } else {
+          toast.error('Erro ao carregar tarefas: ' + error.message);
+        }
+        
+        setLoading(false);
+      }
+    );
 
     return unsubscribe;
   }, [currentUser]);
@@ -57,6 +81,7 @@ export function useTasks() {
     if (!currentUser) return;
 
     try {
+      console.log('useTasks: Adding task for user:', currentUser.uid);
       await addDoc(collection(db, 'tasks'), {
         ...taskData,
         userId: currentUser.uid,
@@ -65,14 +90,15 @@ export function useTasks() {
         dueDate: taskData.dueDate ? Timestamp.fromDate(taskData.dueDate) : null,
       });
       toast.success('Tarefa adicionada com sucesso!');
-    } catch (error) {
-      toast.error('Erro ao adicionar tarefa');
-      console.error('Error adding task:', error);
+    } catch (error: any) {
+      console.error('useTasks: Error adding task:', error);
+      toast.error('Erro ao adicionar tarefa: ' + error.message);
     }
   };
 
   const updateTask = async (taskId: string, updates: Partial<Task>) => {
     try {
+      console.log('useTasks: Updating task:', taskId);
       const taskRef = doc(db, 'tasks', taskId);
       await updateDoc(taskRef, {
         ...updates,
@@ -80,19 +106,20 @@ export function useTasks() {
         dueDate: updates.dueDate ? Timestamp.fromDate(updates.dueDate) : null,
       });
       toast.success('Tarefa atualizada!');
-    } catch (error) {
-      toast.error('Erro ao atualizar tarefa');
-      console.error('Error updating task:', error);
+    } catch (error: any) {
+      console.error('useTasks: Error updating task:', error);
+      toast.error('Erro ao atualizar tarefa: ' + error.message);
     }
   };
 
   const deleteTask = async (taskId: string) => {
     try {
+      console.log('useTasks: Deleting task:', taskId);
       await deleteDoc(doc(db, 'tasks', taskId));
       toast.success('Tarefa eliminada!');
-    } catch (error) {
-      toast.error('Erro ao eliminar tarefa');
-      console.error('Error deleting task:', error);
+    } catch (error: any) {
+      console.error('useTasks: Error deleting task:', error);
+      toast.error('Erro ao eliminar tarefa: ' + error.message);
     }
   };
 
