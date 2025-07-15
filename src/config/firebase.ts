@@ -6,12 +6,12 @@ import { getMessaging, isSupported } from 'firebase/messaging';
 
 const firebaseConfig = {
   // Você precisa adicionar suas credenciais do Firebase aqui
-  apiKey: "your-api-key",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project.appspot.com",
+  apiKey: "AIzaSyCcK4hM_lFXIKeRdi3xeZ9O0H4b2smI9K8",
+  authDomain: "todolist-c3fa3.firebaseapp.com",
+  projectId: "todolist-c3fa3",
+  storageBucket: "todolist-c3fa3.appspot.com",
   messagingSenderId: "123456789",
-  appId: "your-app-id"
+  appId: "todolist-c3fa3.appspot.com"
 };
 
 const app = initializeApp(firebaseConfig);
