@@ -11,7 +11,7 @@ import { CalendarIcon, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { Task } from '../../types/task';
+import { Task, TaskPriority } from '../../types/task';
 
 interface TaskFormProps {
   onSubmit: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => Promise<void>;
@@ -22,7 +22,7 @@ interface TaskFormProps {
 export function TaskForm({ onSubmit, initialData, submitLabel = 'Adicionar Tarefa' }: TaskFormProps) {
   const [title, setTitle] = useState(initialData?.title || '');
   const [description, setDescription] = useState(initialData?.description || '');
-  const [priority, setPriority] = useState<'low' | 'medium' | 'high'>(initialData?.priority || 'medium');
+  const [priority, setPriority] = useState<TaskPriority>(initialData?.priority || 'media');
   const [category, setCategory] = useState(initialData?.category || '');
   const [dueDate, setDueDate] = useState<Date | undefined>(initialData?.dueDate);
   const [loading, setLoading] = useState(false);
@@ -40,12 +40,13 @@ export function TaskForm({ onSubmit, initialData, submitLabel = 'Adicionar Taref
         category: category.trim() || undefined,
         dueDate,
         completed: initialData?.completed || false,
+        status: initialData?.status || 'por-fazer',
       });
       
       if (!initialData) {
         setTitle('');
         setDescription('');
-        setPriority('medium');
+        setPriority('media');
         setCategory('');
         setDueDate(undefined);
       }
@@ -81,14 +82,14 @@ export function TaskForm({ onSubmit, initialData, submitLabel = 'Adicionar Taref
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Prioridade</Label>
-          <Select value={priority} onValueChange={(value: 'low' | 'medium' | 'high') => setPriority(value)}>
+          <Select value={priority} onValueChange={(value: TaskPriority) => setPriority(value)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="low">Baixa</SelectItem>
-              <SelectItem value="medium">Média</SelectItem>
-              <SelectItem value="high">Alta</SelectItem>
+              <SelectItem value="baixa">Baixa</SelectItem>
+              <SelectItem value="media">Média</SelectItem>
+              <SelectItem value="alta">Alta</SelectItem>
             </SelectContent>
           </Select>
         </div>

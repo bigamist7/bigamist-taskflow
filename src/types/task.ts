@@ -7,9 +7,10 @@ export interface Task {
   createdAt: Date;
   updatedAt: Date;
   userId: string;
-  priority: 'low' | 'medium' | 'high';
+  priority: 'baixa' | 'media' | 'alta';
   category?: string;
   dueDate?: Date;
+  status: 'por-fazer' | 'concluida';
 }
 
 export interface User {
@@ -20,3 +21,5 @@ export interface User {
 
 export type TaskFilter = 'all' | 'active' | 'completed';
 export type TaskSort = 'date' | 'priority' | 'title';
+export type TaskStatus = 'por-fazer' | 'concluida';
+export type TaskPriority = 'baixa' | 'media' | 'alta';

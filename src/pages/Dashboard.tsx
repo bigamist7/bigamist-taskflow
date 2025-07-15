@@ -29,7 +29,7 @@ export function Dashboard() {
     document.title = 'TaskFlow - Dashboard';
   }, []);
 
-  const handleCreateTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const handleCreateTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => {
     try {
       await createTask(taskData);
       setShowTaskForm(false);
@@ -47,7 +47,7 @@ export function Dashboard() {
     }
   };
 
-  const handleUpdateTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const handleUpdateTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => {
     if (!editingTask) return;
     
     try {
@@ -88,6 +88,11 @@ export function Dashboard() {
   const handleEditTask = (task: Task) => {
     setEditingTask(task);
     setShowTaskForm(true);
+  };
+
+  const handleStatusChange = (taskId: string, status: TaskStatus) => {
+    const completed = status === 'concluida';
+    updateTask(taskId, { status, completed });
   };
 
   const filteredTasks = tasks.filter(task => {
@@ -265,7 +270,7 @@ export function Dashboard() {
                     task={task}
                     onEdit={handleEditTask}
                     onDelete={handleDeleteTask}
-                    onStatusChange={(taskId, status) => updateTask(taskId, { status })}
+                    onStatusChange={handleStatusChange}
                   />
                 ))}
               </div>
@@ -291,7 +296,7 @@ export function Dashboard() {
                     task={task}
                     onEdit={handleEditTask}
                     onDelete={handleDeleteTask}
-                    onStatusChange={(taskId, status) => updateTask(taskId, { status })}
+                    onStatusChange={handleStatusChange}
                   />
                 ))}
               </div>
@@ -317,7 +322,7 @@ export function Dashboard() {
                     task={task}
                     onEdit={handleEditTask}
                     onDelete={handleDeleteTask}
-                    onStatusChange={(taskId, status) => updateTask(taskId, { status })}
+                    onStatusChange={handleStatusChange}
                   />
                 ))}
               </div>
@@ -328,7 +333,7 @@ export function Dashboard() {
 
       {showTaskForm && (
         <TaskForm
-          task={editingTask}
+          initialData={editingTask || undefined}
           onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
           onCancel={() => {
             setShowTaskForm(false);

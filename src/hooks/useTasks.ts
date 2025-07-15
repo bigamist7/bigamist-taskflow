@@ -39,7 +39,6 @@ export function useTasks() {
 
     console.log('🔗 useTasks: Setting up Firestore listener for user:', currentUser.uid);
 
-    // Simplified query without orderBy to avoid index requirement
     const q = query(
       collection(db, 'tasks'),
       where('userId', '==', currentUser.uid)
@@ -97,15 +96,15 @@ export function useTasks() {
     return unsubscribe;
   }, [currentUser]);
 
-  const addTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => {
+  const createTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => {
     if (!currentUser) {
-      console.error('❌ addTask: No current user');
+      console.error('❌ createTask: No current user');
       toast.error('❌ Utilizador não autenticado');
       return;
     }
 
-    console.log('➕ useTasks: Adding task for user:', currentUser.uid);
-    console.log('📝 Task data to add:', taskData);
+    console.log('➕ useTasks: Creating task for user:', currentUser.uid);
+    console.log('📝 Task data to create:', taskData);
 
     try {
       const docData = {
@@ -119,22 +118,26 @@ export function useTasks() {
       console.log('💾 Final document data:', docData);
       
       const docRef = await addDoc(collection(db, 'tasks'), docData);
-      console.log('✅ Task added successfully with ID:', docRef.id);
-      toast.success('✅ Tarefa adicionada com sucesso!');
+      console.log('✅ Task created successfully with ID:', docRef.id);
+      toast.success('✅ Tarefa criada com sucesso!');
     } catch (error: any) {
-      console.error('💥 useTasks: Error adding task:', error);
-      console.error('🔍 Add error details:', {
+      console.error('💥 useTasks: Error creating task:', error);
+      console.error('🔍 Create error details:', {
         code: error.code,
         message: error.message,
         stack: error.stack
       });
       
       if (error.code === 'permission-denied') {
-        toast.error('❌ Sem permissão para adicionar tarefas. Verifique as regras do Firestore.');
+        toast.error('❌ Sem permissão para criar tarefas. Verifique as regras do Firestore.');
       } else {
-        toast.error('❌ Erro ao adicionar tarefa: ' + error.message);
+        toast.error('❌ Erro ao criar tarefa: ' + error.message);
       }
     }
+  };
+
+  const addTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => {
+    return createTask(taskData);
   };
 
   const updateTask = async (taskId: string, updates: Partial<Task>) => {
@@ -167,7 +170,8 @@ export function useTasks() {
   };
 
   const toggleTask = async (taskId: string, completed: boolean) => {
-    await updateTask(taskId, { completed });
+    const status = completed ? 'concluida' : 'por-fazer';
+    await updateTask(taskId, { completed, status });
   };
 
   const filteredTasks = tasks.filter(task => {
@@ -181,11 +185,10 @@ export function useTasks() {
     }
   });
 
-  // Client-side sorting since we removed orderBy from Firestore query
   const sortedTasks = [...filteredTasks].sort((a, b) => {
     switch (sort) {
       case 'priority':
-        const priorityOrder = { high: 3, medium: 2, low: 1 };
+        const priorityOrder = { alta: 3, media: 2, baixa: 1 };
         return priorityOrder[b.priority] - priorityOrder[a.priority];
       case 'title':
         return a.title.localeCompare(b.title);
@@ -202,6 +205,7 @@ export function useTasks() {
     sort,
     setFilter,
     setSort,
+    createTask,
     addTask,
     updateTask,
     deleteTask,

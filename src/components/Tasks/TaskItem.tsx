@@ -9,37 +9,42 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Edit3, Trash2, Calendar, Tag, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
-import { Task } from '../../types/task';
+import { Task, TaskStatus } from '../../types/task';
 import { TaskForm } from './TaskForm';
 import { cn } from '@/lib/utils';
 
 interface TaskItemProps {
   task: Task;
-  onToggle: (id: string, completed: boolean) => void;
-  onUpdate: (id: string, updates: Partial<Task>) => void;
-  onDelete: (id: string) => void;
+  onEdit: (task: Task) => void;
+  onDelete: (taskId: string) => void;
+  onStatusChange: (taskId: string, status: TaskStatus) => void;
 }
 
-export function TaskItem({ task, onToggle, onUpdate, onDelete }: TaskItemProps) {
+export function TaskItem({ task, onEdit, onDelete, onStatusChange }: TaskItemProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const priorityColors = {
-    low: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-    medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-    high: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+    baixa: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+    media: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+    alta: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
   };
 
   const priorityLabels = {
-    low: 'Baixa',
-    medium: 'Média',
-    high: 'Alta'
+    baixa: 'Baixa',
+    media: 'Média',
+    alta: 'Alta'
   };
 
   const isOverdue = task.dueDate && task.dueDate < new Date() && !task.completed;
 
   const handleUpdate = async (updates: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => {
-    await onUpdate(task.id, updates);
+    onEdit({ ...task, ...updates });
     setIsEditDialogOpen(false);
+  };
+
+  const handleStatusToggle = (checked: boolean) => {
+    const newStatus: TaskStatus = checked ? 'concluida' : 'por-fazer';
+    onStatusChange(task.id, newStatus);
   };
 
   return (
@@ -52,7 +57,7 @@ export function TaskItem({ task, onToggle, onUpdate, onDelete }: TaskItemProps) 
         <div className="flex items-start gap-3">
           <Checkbox
             checked={task.completed}
-            onCheckedChange={(checked) => onToggle(task.id, checked as boolean)}
+            onCheckedChange={handleStatusToggle}
             className="mt-1"
             aria-label={`Marcar "${task.title}" como ${task.completed ? 'não concluída' : 'concluída'}`}
           />
