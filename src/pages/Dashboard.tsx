@@ -8,7 +8,7 @@ import { Header } from '../components/Layout/Header';
 import { TaskForm } from '../components/Tasks/TaskForm';
 import { TaskItem } from '../components/Tasks/TaskItem';
 import { TaskFilters } from '../components/Tasks/TaskFilters';
-import { ChatbotWidget } from '../components/Chatbot/ChatbotWidget';
+import { AdvancedChatbotWidget } from '../components/Chatbot/AdvancedChatbotWidget';
 import { useTasks } from '../hooks/useTasks';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -231,7 +231,7 @@ export function Dashboard() {
         </div>
       </main>
 
-      <ChatbotWidget />
+      <AdvancedChatbotWidget />
     </div>
   );
 }
