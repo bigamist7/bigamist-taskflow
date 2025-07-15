@@ -13,6 +13,7 @@ interface Message {
   text: string;
   isBot: boolean;
   timestamp: Date;
+  provider?: string;
 }
 
 export function ChatbotWidget() {
@@ -20,9 +21,10 @@ export function ChatbotWidget() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      text: 'Olá! Sou o seu assistente de tarefas. Como posso ajudar?',
+      text: 'Olá! Sou o seu assistente inteligente. Pergunto automaticamente ao modelo mais adequado para cada questão!',
       isBot: true,
       timestamp: new Date(),
+      provider: 'local',
     },
   ]);
   const [inputMessage, setInputMessage] = useState('');
@@ -47,14 +49,128 @@ export function ChatbotWidget() {
     }
   }, [isOpen]);
 
-  const getBotResponse = async (message: string): Promise<string> => {
+  const detectBestProvider = (message: string): string => {
+    const lowerMessage = message.toLowerCase();
+    
+    // Palavras-chave para perguntas que precisam de informação atualizada/web
+    const webKeywords = [
+      'notícias', 'atual', 'recente', 'hoje', 'ontem', 'esta semana', 'este mês',
+      'preço', 'cotação', 'bolsa', 'mercado', 'stock', 'ações',
+      'tempo', 'clima', 'temperatura', 'chuva', 'sol',
+      'eventos', 'acontecimentos', 'últimas', 'breaking news',
+      'quem é', 'biografia', 'vida de', 'carreira de',
+      'quando aconteceu', 'data de', 'quando foi',
+      'onde fica', 'localização', 'endereço',
+      'pesquisar', 'procurar', 'encontrar informação',
+      'verificar', 'confirmar', 'validar',
+      'presidente', 'governo', 'política atual', 'eleições',
+      'covid', 'pandemia', 'vacina', 'saúde pública',
+      'guerra', 'conflito', 'internacional'
+    ];
+
+    // Palavras-chave para tarefas básicas locais
+    const localKeywords = [
+      'organizar', 'filtros', 'filtrar', 'adicionar', 'criar', 'nova tarefa',
+      'editar', 'modificar', 'alterar', 'eliminar', 'apagar', 'remover',
+      'ajuda', 'help', 'como usar', 'tutorial', 'explicar',
+      'prioridade', 'categoria', 'data limite', 'completar',
+      'olá', 'ola', 'bom dia', 'boa tarde', 'boa noite',
+      'obrigado', 'obrigada', 'tchau', 'adeus',
+      'taskflow', 'tarefas', 'lista', 'to-do'
+    ];
+
+    // Verifica se é uma pergunta sobre web/informação atual
+    const hasWebKeywords = webKeywords.some(keyword => lowerMessage.includes(keyword));
+    
+    // Verifica se é uma pergunta básica sobre tarefas
+    const hasLocalKeywords = localKeywords.some(keyword => lowerMessage.includes(keyword));
+
+    // Perguntas que sugerem necessidade de informação web atual
+    const webPatterns = [
+      /qual.*preço/,
+      /quanto custa/,
+      /o que aconteceu/,
+      /últimas notícias/,
+      /quem ganhou/,
+      /resultado.*jogo/,
+      /quando.*vai.*acontecer/,
+      /onde.*fica/,
+      /como.*chegar/
+    ];
+
+    const hasWebPatterns = webPatterns.some(pattern => pattern.test(lowerMessage));
+
+    // Se tem palavras-chave de web ou padrões de web, usa Perplexity
+    if (hasWebKeywords || hasWebPatterns) {
+      return 'perplexity';
+    }
+
+    // Se tem palavras-chave locais, usa local
+    if (hasLocalKeywords) {
+      return 'local';
+    }
+
+    // Para perguntas complexas ou criativas, usa OpenAI
+    const complexPatterns = [
+      /explica.*como/,
+      /diferença.*entre/,
+      /vantagens.*desvantagens/,
+      /pros.*contras/,
+      /escreve.*texto/,
+      /cria.*história/,
+      /traduz/,
+      /resumo/,
+      /análise/,
+      /comparação/,
+      /estratégia/,
+      /plano/,
+      /sugestões.*melhorar/
+    ];
+
+    const isComplexQuestion = complexPatterns.some(pattern => pattern.test(lowerMessage));
+    
+    if (isComplexQuestion || lowerMessage.length > 100) {
+      return 'openai';
+    }
+
+    // Default para local para perguntas simples
+    return 'local';
+  };
+
+  const getProviderIcon = (provider?: string) => {
+    switch (provider) {
+      case 'openai':
+        return '🤖';
+      case 'perplexity':
+        return '🌐';
+      case 'local':
+      default:
+        return '💡';
+    }
+  };
+
+  const getProviderName = (provider?: string) => {
+    switch (provider) {
+      case 'openai':
+        return 'OpenAI';
+      case 'perplexity':
+        return 'Perplexity';
+      case 'local':
+      default:
+        return 'Local';
+    }
+  };
+
+  const getBotResponse = async (message: string): Promise<{ text: string; provider: string }> => {
+    const selectedProvider = detectBestProvider(message);
+    
     try {
-      console.log('Calling AI chat function with:', { message, provider: 'local' });
+      console.log(`Auto-selected provider: ${selectedProvider} for message: "${message}"`);
       
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
           message,
-          provider: 'local',
+          provider: selectedProvider,
         },
       });
 
@@ -64,64 +180,38 @@ export function ChatbotWidget() {
       }
 
       console.log('AI chat response:', data);
-      return data.text || 'Desculpe, não consegui gerar uma resposta.';
+      return { 
+        text: data.text || 'Desculpe, não consegui gerar uma resposta.', 
+        provider: selectedProvider 
+      };
     } catch (error) {
       console.error('AI Provider Error:', error);
       
       // Fallback to local responses
       const responseMap = {
-        // Task organization keywords
         organizar: 'Recomendo organizar as suas tarefas por prioridade! Use as etiquetas "Alta", "Média" e "Baixa" e defina datas limite para as mais importantes.',
         prioridade: 'Recomendo organizar as suas tarefas por prioridade! Use as etiquetas "Alta", "Média" e "Baixa" e defina datas limite para as mais importantes.',
-        prioridades: 'Recomendo organizar as suas tarefas por prioridade! Use as etiquetas "Alta", "Média" e "Baixa" e defina datas limite para as mais importantes.',
-        
-        // Filter keywords
         filtros: 'Pode filtrar as suas tarefas por: "Todas", "Por Fazer" ou "Concluídas". Use também a ordenação por data, prioridade ou título.',
-        filtrar: 'Pode filtrar as suas tarefas por: "Todas", "Por Fazer" ou "Concluídas". Use também a ordenação por data, prioridade ou título.',
-        ordenar: 'Pode filtrar as suas tarefas por: "Todas", "Por Fazer" ou "Concluídas". Use também a ordenação por data, prioridade ou título.',
-        
-        // Add task keywords
         adicionar: 'Para adicionar uma nova tarefa, clique no botão "Nova Tarefa", preencha o título (obrigatório), descrição, prioridade e categoria.',
-        criar: 'Para adicionar uma nova tarefa, clique no botão "Nova Tarefa", preencha o título (obrigatório), descrição, prioridade e categoria.',
-        nova: 'Para adicionar uma nova tarefa, clique no botão "Nova Tarefa", preencha o título (obrigatório), descrição, prioridade e categoria.',
-        
-        // Edit task keywords
         editar: 'Para editar uma tarefa, clique no ícone do lápis na tarefa que pretende modificar.',
-        modificar: 'Para editar uma tarefa, clique no ícone do lápis na tarefa que pretende modificar.',
-        alterar: 'Para editar uma tarefa, clique no ícone do lápis na tarefa que pretende modificar.',
-        
-        // Delete task keywords
         eliminar: 'Para eliminar uma tarefa, clique no ícone do lixo e confirme a ação.',
-        apagar: 'Para eliminar uma tarefa, clique no ícone do lixo e confirme a ação.',
-        remover: 'Para eliminar uma tarefa, clique no ícone do lixo e confirme a ação.',
-        
-        // Help keywords
-        ajuda: 'Posso ajudar com: organização de tarefas, uso de filtros, adição/edição/eliminação de tarefas, e dicas de produtividade!',
-        help: 'Posso ajudar com: organização de tarefas, uso de filtros, adição/edição/eliminação de tarefas, e dicas de produtividade!',
-        
-        // Productivity keywords
-        produtividade: 'Dicas de produtividade: 1) Defina prioridades claras, 2) Use a técnica Pomodoro, 3) Organize tarefas por categoria, 4) Defina datas limite realistas.',
-        dicas: 'Dicas de produtividade: 1) Defina prioridades claras, 2) Use a técnica Pomodoro, 3) Organize tarefas por categoria, 4) Defina datas limite realistas.',
-        
-        // Greetings
+        ajuda: 'Posso ajudar com: organização de tarefas, filtros, adição/edição/eliminação de tarefas, e dicas de produtividade!',
         olá: 'Olá! Como posso ajudá-lo hoje com as suas tarefas?',
-        ola: 'Olá! Como posso ajudá-lo hoje com as suas tarefas?',
-        bom: 'Olá! Como posso ajudá-lo hoje com as suas tarefas?',
         obrigado: 'De nada! Estou aqui para ajudar sempre que precisar.',
-        obrigada: 'De nada! Estou aqui para ajudar sempre que precisar.',
       };
 
       const lowerMessage = message.toLowerCase();
       
-      // Check each keyword in the response map
       for (const [keyword, response] of Object.entries(responseMap)) {
         if (lowerMessage.includes(keyword)) {
-          return response;
+          return { text: response, provider: 'local' };
         }
       }
       
-      // Default response if no keywords match
-      return 'Desculpe, não entendi a sua pergunta. Pode perguntar sobre: organização de tarefas, filtros, como adicionar/editar tarefas, ou pedir ajuda geral.';
+      return { 
+        text: 'Desculpe, não entendi a sua pergunta. Pode perguntar sobre: organização de tarefas, filtros, como adicionar/editar tarefas, ou pedir ajuda geral.', 
+        provider: 'local' 
+      };
     }
   };
 
@@ -136,17 +226,19 @@ export function ChatbotWidget() {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentMessage = inputMessage;
     setInputMessage('');
     setIsLoading(true);
 
     try {
-      const botResponseText = await getBotResponse(inputMessage);
+      const { text: botResponseText, provider } = await getBotResponse(currentMessage);
       
       const botResponse: Message = {
         id: Date.now() + 1,
         text: botResponseText,
         isBot: true,
         timestamp: new Date(),
+        provider,
       };
       
       setMessages(prev => [...prev, botResponse]);
@@ -157,6 +249,7 @@ export function ChatbotWidget() {
         text: 'Desculpe, ocorreu um erro. Tente novamente.',
         isBot: true,
         timestamp: new Date(),
+        provider: 'local',
       };
       setMessages(prev => [...prev, errorResponse]);
     } finally {
@@ -178,7 +271,7 @@ export function ChatbotWidget() {
           onClick={() => setIsOpen(true)}
           size="icon"
           className="h-12 w-12 rounded-full shadow-lg hover:scale-105 transition-transform"
-          aria-label="Abrir chat de ajuda"
+          aria-label="Abrir assistente inteligente"
         >
           <MessageCircle className="h-6 w-6" />
         </Button>
@@ -186,7 +279,7 @@ export function ChatbotWidget() {
         <Card className="w-80 h-96 shadow-xl flex flex-col">
           <CardHeader className="pb-3 flex-shrink-0">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Assistente TaskFlow</CardTitle>
+              <CardTitle className="text-lg">Assistente IA Auto</CardTitle>
               <Button
                 variant="ghost"
                 size="icon"
@@ -213,6 +306,12 @@ export function ChatbotWidget() {
                           : 'bg-primary text-primary-foreground'
                       }`}
                     >
+                      {message.isBot && message.provider && (
+                        <div className="text-xs opacity-70 mb-1 flex items-center gap-1">
+                          <span>{getProviderIcon(message.provider)}</span>
+                          <span>{getProviderName(message.provider)}</span>
+                        </div>
+                      )}
                       {message.text}
                     </div>
                   </div>
@@ -221,7 +320,7 @@ export function ChatbotWidget() {
                 {isLoading && (
                   <div className="flex justify-start">
                     <div className="bg-muted text-muted-foreground p-2 rounded-lg text-sm">
-                      <div className="animate-pulse">A pensar...</div>
+                      <div className="animate-pulse">A analisar e a pensar...</div>
                     </div>
                   </div>
                 )}
@@ -236,7 +335,7 @@ export function ChatbotWidget() {
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Digite a sua pergunta..."
+                placeholder="Pergunte qualquer coisa..."
                 className="flex-1"
                 autoComplete="off"
                 disabled={isLoading}
