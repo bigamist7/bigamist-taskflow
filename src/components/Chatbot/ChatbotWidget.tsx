@@ -19,14 +19,47 @@ export function ChatbotWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const predefinedResponses = {
-    'como organizar tarefas': 'Recomendo organizar as suas tarefas por prioridade! Use as etiquetas "Alta", "Média" e "Baixa" e defina datas limite para as mais importantes.',
-    'como usar filtros': 'Pode filtrar as suas tarefas por: "Todas", "Por Fazer" ou "Concluídas". Use também a ordenação por data, prioridade ou título.',
-    'como adicionar tarefa': 'Para adicionar uma nova tarefa, clique no botão "Nova Tarefa", preencha o título (obrigatório), descrição, prioridade e categoria.',
-    'como editar tarefa': 'Para editar uma tarefa, clique no ícone do lápis na tarefa que pretende modificar.',
-    'como eliminar tarefa': 'Para eliminar uma tarefa, clique no ícone do lixo e confirme a ação.',
-    'ajuda': 'Posso ajudar com: organização de tarefas, uso de filtros, adição/edição/eliminação de tarefas, e dicas de produtividade!',
-    'produtividade': 'Dicas de produtividade: 1) Defina prioridades claras, 2) Use a técnica Pomodoro, 3) Organize tarefas por categoria, 4) Defina datas limite realistas.',
+  // Reorganized responses with better keyword matching
+  const responseMap = {
+    // Task organization keywords
+    organizar: 'Recomendo organizar as suas tarefas por prioridade! Use as etiquetas "Alta", "Média" e "Baixa" e defina datas limite para as mais importantes.',
+    prioridade: 'Recomendo organizar as suas tarefas por prioridade! Use as etiquetas "Alta", "Média" e "Baixa" e defina datas limite para as mais importantes.',
+    prioridades: 'Recomendo organizar as suas tarefas por prioridade! Use as etiquetas "Alta", "Média" e "Baixa" e defina datas limite para as mais importantes.',
+    
+    // Filter keywords
+    filtros: 'Pode filtrar as suas tarefas por: "Todas", "Por Fazer" ou "Concluídas". Use também a ordenação por data, prioridade ou título.',
+    filtrar: 'Pode filtrar as suas tarefas por: "Todas", "Por Fazer" ou "Concluídas". Use também a ordenação por data, prioridade ou título.',
+    ordenar: 'Pode filtrar as suas tarefas por: "Todas", "Por Fazer" ou "Concluídas". Use também a ordenação por data, prioridade ou título.',
+    
+    // Add task keywords
+    adicionar: 'Para adicionar uma nova tarefa, clique no botão "Nova Tarefa", preencha o título (obrigatório), descrição, prioridade e categoria.',
+    criar: 'Para adicionar uma nova tarefa, clique no botão "Nova Tarefa", preencha o título (obrigatório), descrição, prioridade e categoria.',
+    nova: 'Para adicionar uma nova tarefa, clique no botão "Nova Tarefa", preencha o título (obrigatório), descrição, prioridade e categoria.',
+    
+    // Edit task keywords
+    editar: 'Para editar uma tarefa, clique no ícone do lápis na tarefa que pretende modificar.',
+    modificar: 'Para editar uma tarefa, clique no ícone do lápis na tarefa que pretende modificar.',
+    alterar: 'Para editar uma tarefa, clique no ícone do lápis na tarefa que pretende modificar.',
+    
+    // Delete task keywords
+    eliminar: 'Para eliminar uma tarefa, clique no ícone do lixo e confirme a ação.',
+    apagar: 'Para eliminar uma tarefa, clique no ícone do lixo e confirme a ação.',
+    remover: 'Para eliminar uma tarefa, clique no ícone do lixo e confirme a ação.',
+    
+    // Help keywords
+    ajuda: 'Posso ajudar com: organização de tarefas, uso de filtros, adição/edição/eliminação de tarefas, e dicas de produtividade!',
+    help: 'Posso ajudar com: organização de tarefas, uso de filtros, adição/edição/eliminação de tarefas, e dicas de produtividade!',
+    
+    // Productivity keywords
+    produtividade: 'Dicas de produtividade: 1) Defina prioridades claras, 2) Use a técnica Pomodoro, 3) Organize tarefas por categoria, 4) Defina datas limite realistas.',
+    dicas: 'Dicas de produtividade: 1) Defina prioridades claras, 2) Use a técnica Pomodoro, 3) Organize tarefas por categoria, 4) Defina datas limite realistas.',
+    
+    // Greetings
+    olá: 'Olá! Como posso ajudá-lo hoje com as suas tarefas?',
+    ola: 'Olá! Como posso ajudá-lo hoje com as suas tarefas?',
+    bom: 'Olá! Como posso ajudá-lo hoje com as suas tarefas?',
+    obrigado: 'De nada! Estou aqui para ajudar sempre que precisar.',
+    obrigada: 'De nada! Estou aqui para ajudar sempre que precisar.',
   };
 
   const scrollToBottom = () => {
@@ -48,12 +81,14 @@ export function ChatbotWidget() {
   const getBotResponse = (message: string) => {
     const lowerMessage = message.toLowerCase();
     
-    for (const [key, response] of Object.entries(predefinedResponses)) {
-      if (lowerMessage.includes(key)) {
+    // Check each keyword in the response map
+    for (const [keyword, response] of Object.entries(responseMap)) {
+      if (lowerMessage.includes(keyword)) {
         return response;
       }
     }
     
+    // Default response if no keywords match
     return 'Desculpe, não entendi a sua pergunta. Pode perguntar sobre: organização de tarefas, filtros, como adicionar/editar tarefas, ou pedir ajuda geral.';
   };
 
