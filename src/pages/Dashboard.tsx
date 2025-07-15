@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, CheckCircle, Clock, AlertTriangle, AlertCircle } from 'lucide-react';
+import { Plus, CheckCircle, Clock, AlertTriangle, AlertCircle, Wifi, WifiOff } from 'lucide-react';
 import { Header } from '../components/Layout/Header';
 import { TaskForm } from '../components/Tasks/TaskForm';
 import { TaskItem } from '../components/Tasks/TaskItem';
@@ -28,11 +28,12 @@ export function Dashboard() {
     toggleTask
   } = useTasks();
 
-  console.log('Dashboard: Render state', { 
+  console.log('🏠 Dashboard: Render state', { 
     loading, 
     tasksCount: tasks.length, 
     currentUser: !!currentUser,
-    uid: currentUser?.uid 
+    uid: currentUser?.uid,
+    email: currentUser?.email
   });
 
   const taskCounts = {
@@ -42,6 +43,7 @@ export function Dashboard() {
   };
 
   const handleAddTask = async (taskData: any) => {
+    console.log('🏠 Dashboard: handleAddTask called with:', taskData);
     await addTask(taskData);
     setIsAddDialogOpen(false);
   };
@@ -66,20 +68,46 @@ export function Dashboard() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
               <p className="text-muted-foreground">A carregar as suas tarefas...</p>
               
-              {/* Debug information */}
-              <div className="mt-4 p-4 bg-muted rounded-lg text-sm text-left max-w-md">
-                <h4 className="font-semibold mb-2 flex items-center gap-2">
+              {/* Informação de Debug Melhorada */}
+              <div className="mt-6 p-4 bg-muted rounded-lg text-sm text-left max-w-lg">
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
                   <AlertCircle className="h-4 w-4" />
-                  Informações de Debug
+                  Estado de Debug
                 </h4>
-                <p>Utilizador: {currentUser?.email}</p>
-                <p>UID: {currentUser?.uid}</p>
-                <p className="text-red-600 mt-2">
-                  Se isto não carregar, provavelmente as regras do Firestore precisam de ser configuradas.
-                </p>
-                <p className="text-xs mt-2 text-muted-foreground">
-                  Verifique o console do navegador para mais detalhes.
-                </p>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    {currentUser ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4 text-red-500" />
+                    )}
+                    <span>Utilizador: {currentUser?.email || 'Não autenticado'}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    {currentUser?.uid ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4 text-red-500" />
+                    )}
+                    <span>UID: {currentUser?.uid || 'N/A'}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Wifi className="h-4 w-4 text-blue-500" />
+                    <span>Conexão Firestore: A tentar conectar...</span>
+                  </div>
+                </div>
+                
+                <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800">
+                  <p className="text-red-600 dark:text-red-400 text-xs font-medium">
+                    ⚠️ Se isto não carregar, as regras do Firestore precisam de ser configuradas!
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Verifique o console do navegador (F12) para mais detalhes.
+                  </p>
+                </div>
               </div>
             </div>
           </div>

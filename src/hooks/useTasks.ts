@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   collection, 
@@ -25,16 +24,20 @@ export function useTasks() {
   const { currentUser } = useAuth();
 
   useEffect(() => {
-    console.log('useTasks: useEffect triggered', { currentUser: !!currentUser, uid: currentUser?.uid });
+    console.log('🔥 useTasks: useEffect triggered', { 
+      currentUser: !!currentUser, 
+      uid: currentUser?.uid,
+      email: currentUser?.email 
+    });
     
     if (!currentUser) {
-      console.log('useTasks: No current user, clearing tasks');
+      console.log('❌ useTasks: No current user, clearing tasks');
       setTasks([]);
       setLoading(false);
       return;
     }
 
-    console.log('useTasks: Setting up Firestore listener for user:', currentUser.uid);
+    console.log('🔗 useTasks: Setting up Firestore listener for user:', currentUser.uid);
 
     const q = query(
       collection(db, 'tasks'),
@@ -44,30 +47,46 @@ export function useTasks() {
 
     const unsubscribe = onSnapshot(q, 
       (snapshot) => {
-        console.log('useTasks: Firestore snapshot received, docs count:', snapshot.docs.length);
+        console.log('✅ useTasks: Firestore snapshot received');
+        console.log('📊 Snapshot details:', {
+          docsCount: snapshot.docs.length,
+          metadata: snapshot.metadata,
+          fromCache: snapshot.metadata.fromCache,
+          hasPendingWrites: snapshot.metadata.hasPendingWrites
+        });
         
-        const tasksData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data().createdAt?.toDate() || new Date(),
-          updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-          dueDate: doc.data().dueDate?.toDate() || undefined,
-        })) as Task[];
+        const tasksData = snapshot.docs.map(doc => {
+          const data = doc.data();
+          console.log('📄 Processing doc:', { id: doc.id, data });
+          
+          return {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate() || new Date(),
+            updatedAt: data.updatedAt?.toDate() || new Date(),
+            dueDate: data.dueDate?.toDate() || undefined,
+          };
+        }) as Task[];
         
-        console.log('useTasks: Processed tasks:', tasksData);
+        console.log('✨ useTasks: Final processed tasks:', tasksData);
         setTasks(tasksData);
         setLoading(false);
       },
       (error) => {
-        console.error('useTasks: Firestore error:', error);
-        console.error('useTasks: Error code:', error.code);
-        console.error('useTasks: Error message:', error.message);
+        console.error('💥 useTasks: Firestore error:', error);
+        console.error('🔍 Error details:', {
+          code: error.code,
+          message: error.message,
+          stack: error.stack
+        });
         
         if (error.code === 'permission-denied') {
-          toast.error('Erro de permissões. Verifique as regras do Firestore.');
-          console.log('useTasks: Permission denied - Firestore rules need to be configured');
+          toast.error('❌ Erro de permissões no Firestore. Verifique as regras de segurança.');
+          console.log('🚫 FIRESTORE RULES PROBLEM: As regras do Firestore não permitem acesso aos dados');
+        } else if (error.code === 'failed-precondition') {
+          toast.error('❌ Firestore: Índice em falta ou configuração incorreta.');
         } else {
-          toast.error('Erro ao carregar tarefas: ' + error.message);
+          toast.error('❌ Erro ao carregar tarefas: ' + error.message);
         }
         
         setLoading(false);
@@ -78,48 +97,71 @@ export function useTasks() {
   }, [currentUser]);
 
   const addTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      console.error('❌ addTask: No current user');
+      toast.error('❌ Utilizador não autenticado');
+      return;
+    }
+
+    console.log('➕ useTasks: Adding task for user:', currentUser.uid);
+    console.log('📝 Task data to add:', taskData);
 
     try {
-      console.log('useTasks: Adding task for user:', currentUser.uid);
-      await addDoc(collection(db, 'tasks'), {
+      const docData = {
         ...taskData,
         userId: currentUser.uid,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
         dueDate: taskData.dueDate ? Timestamp.fromDate(taskData.dueDate) : null,
-      });
-      toast.success('Tarefa adicionada com sucesso!');
+      };
+      
+      console.log('💾 Final document data:', docData);
+      
+      const docRef = await addDoc(collection(db, 'tasks'), docData);
+      console.log('✅ Task added successfully with ID:', docRef.id);
+      toast.success('✅ Tarefa adicionada com sucesso!');
     } catch (error: any) {
-      console.error('useTasks: Error adding task:', error);
-      toast.error('Erro ao adicionar tarefa: ' + error.message);
+      console.error('💥 useTasks: Error adding task:', error);
+      console.error('🔍 Add error details:', {
+        code: error.code,
+        message: error.message,
+        stack: error.stack
+      });
+      
+      if (error.code === 'permission-denied') {
+        toast.error('❌ Sem permissão para adicionar tarefas. Verifique as regras do Firestore.');
+      } else {
+        toast.error('❌ Erro ao adicionar tarefa: ' + error.message);
+      }
     }
   };
 
   const updateTask = async (taskId: string, updates: Partial<Task>) => {
     try {
-      console.log('useTasks: Updating task:', taskId);
+      console.log('📝 useTasks: Updating task:', taskId, updates);
       const taskRef = doc(db, 'tasks', taskId);
       await updateDoc(taskRef, {
         ...updates,
         updatedAt: Timestamp.now(),
         dueDate: updates.dueDate ? Timestamp.fromDate(updates.dueDate) : null,
       });
-      toast.success('Tarefa atualizada!');
+      console.log('✅ Task updated successfully');
+      toast.success('✅ Tarefa atualizada!');
     } catch (error: any) {
-      console.error('useTasks: Error updating task:', error);
-      toast.error('Erro ao atualizar tarefa: ' + error.message);
+      console.error('💥 useTasks: Error updating task:', error);
+      toast.error('❌ Erro ao atualizar tarefa: ' + error.message);
     }
   };
 
   const deleteTask = async (taskId: string) => {
     try {
-      console.log('useTasks: Deleting task:', taskId);
+      console.log('🗑️ useTasks: Deleting task:', taskId);
       await deleteDoc(doc(db, 'tasks', taskId));
-      toast.success('Tarefa eliminada!');
+      console.log('✅ Task deleted successfully');
+      toast.success('✅ Tarefa eliminada!');
     } catch (error: any) {
-      console.error('useTasks: Error deleting task:', error);
-      toast.error('Erro ao eliminar tarefa: ' + error.message);
+      console.error('💥 useTasks: Error deleting task:', error);
+      toast.error('❌ Erro ao eliminar tarefa: ' + error.message);
     }
   };
 

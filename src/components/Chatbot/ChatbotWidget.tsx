@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MessageCircle, X, Send } from 'lucide-react';
@@ -16,6 +16,8 @@ export function ChatbotWidget() {
     },
   ]);
   const [inputMessage, setInputMessage] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const predefinedResponses = {
     'como organizar tarefas': 'Recomendo organizar as suas tarefas por prioridade! Use as etiquetas "Alta", "Média" e "Baixa" e defina datas limite para as mais importantes.',
@@ -26,6 +28,22 @@ export function ChatbotWidget() {
     'ajuda': 'Posso ajudar com: organização de tarefas, uso de filtros, adição/edição/eliminação de tarefas, e dicas de produtividade!',
     'produtividade': 'Dicas de produtividade: 1) Defina prioridades claras, 2) Use a técnica Pomodoro, 3) Organize tarefas por categoria, 4) Defina datas limite realistas.',
   };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    }
+  }, [isOpen]);
 
   const getBotResponse = (message: string) => {
     const lowerMessage = message.toLowerCase();
@@ -65,8 +83,9 @@ export function ChatbotWidget() {
     setInputMessage('');
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
       sendMessage();
     }
   };
@@ -83,8 +102,8 @@ export function ChatbotWidget() {
           <MessageCircle className="h-6 w-6" />
         </Button>
       ) : (
-        <Card className="w-80 h-96 shadow-xl">
-          <CardHeader className="pb-3">
+        <Card className="w-80 h-96 shadow-xl flex flex-col">
+          <CardHeader className="pb-3 flex-shrink-0">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">Assistente TaskFlow</CardTitle>
               <Button
@@ -98,8 +117,8 @@ export function ChatbotWidget() {
             </div>
           </CardHeader>
           
-          <CardContent className="flex flex-col h-full pb-4">
-            <div className="flex-1 overflow-y-auto space-y-3 mb-3">
+          <CardContent className="flex flex-col flex-1 p-4 pt-0">
+            <div className="flex-1 overflow-y-auto space-y-3 mb-3 pr-2">
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -116,17 +135,24 @@ export function ChatbotWidget() {
                   </div>
                 </div>
               ))}
+              <div ref={messagesEndRef} />
             </div>
             
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-shrink-0">
               <Input
+                ref={inputRef}
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyDown}
                 placeholder="Digite a sua pergunta..."
                 className="flex-1"
+                autoComplete="off"
               />
-              <Button onClick={sendMessage} size="icon">
+              <Button 
+                onClick={sendMessage} 
+                size="icon"
+                disabled={!inputMessage.trim()}
+              >
                 <Send className="h-4 w-4" />
               </Button>
             </div>
