@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -200,6 +199,8 @@ export function ChatbotWidget() {
         obrigado: 'De nada! Estou aqui para ajudar sempre que precisar.',
       };
 
+      const lowerMessage = message.toLowerCase();
+      
       for (const [keyword, response] of Object.entries(responseMap)) {
         if (lowerMessage.includes(keyword)) {
           return { text: response, provider: 'local' };
