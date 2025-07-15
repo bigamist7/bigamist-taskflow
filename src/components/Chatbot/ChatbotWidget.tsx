@@ -165,7 +165,7 @@ export function ChatbotWidget() {
     const selectedProvider = detectBestProvider(message);
     
     try {
-      console.log(`Auto-selected provider: ${selectedProvider} for message: "${message}"`);
+      console.log(`🔄 Auto-selecionado: ${selectedProvider} para: "${message}"`);
       
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
@@ -175,22 +175,22 @@ export function ChatbotWidget() {
       });
 
       if (error) {
-        console.error('Supabase function error:', error);
+        console.error('❌ Erro na função Supabase:', error);
         throw new Error(error.message || 'Erro na chamada da função');
       }
 
-      console.log('AI chat response:', data);
+      console.log('✅ Resposta da IA:', data);
       return { 
         text: data.text || 'Desculpe, não consegui gerar uma resposta.', 
         provider: selectedProvider 
       };
     } catch (error) {
-      console.error('AI Provider Error:', error);
+      console.error('❌ Erro do provedor de IA:', error);
       
-      // Fallback to local responses
+      // Fallback para respostas locais
       const responseMap = {
         organizar: 'Recomendo organizar as suas tarefas por prioridade! Use as etiquetas "Alta", "Média" e "Baixa" e defina datas limite para as mais importantes.',
-        prioridade: 'Recomendo organizar as suas tarefas por prioridade! Use as etiquetas "Alta", "Média" e "Baixa" e defina datas limite para as mais importantes.',
+        prioridade: 'Para definir prioridades, clique numa tarefa e seleccione entre "Alta", "Média" ou "Baixa" prioridade.',
         filtros: 'Pode filtrar as suas tarefas por: "Todas", "Por Fazer" ou "Concluídas". Use também a ordenação por data, prioridade ou título.',
         adicionar: 'Para adicionar uma nova tarefa, clique no botão "Nova Tarefa", preencha o título (obrigatório), descrição, prioridade e categoria.',
         editar: 'Para editar uma tarefa, clique no ícone do lápis na tarefa que pretende modificar.',
@@ -200,8 +200,6 @@ export function ChatbotWidget() {
         obrigado: 'De nada! Estou aqui para ajudar sempre que precisar.',
       };
 
-      const lowerMessage = message.toLowerCase();
-      
       for (const [keyword, response] of Object.entries(responseMap)) {
         if (lowerMessage.includes(keyword)) {
           return { text: response, provider: 'local' };
@@ -216,7 +214,7 @@ export function ChatbotWidget() {
   };
 
   const sendMessage = async () => {
-    if (!inputMessage.trim()) return;
+    if (!inputMessage.trim() || isLoading) return;
 
     const userMessage: Message = {
       id: Date.now(),
@@ -243,7 +241,7 @@ export function ChatbotWidget() {
       
       setMessages(prev => [...prev, botResponse]);
     } catch (error) {
-      console.error('Send message error:', error);
+      console.error('❌ Erro ao enviar mensagem:', error);
       const errorResponse: Message = {
         id: Date.now() + 1,
         text: 'Desculpe, ocorreu um erro. Tente novamente.',
@@ -252,6 +250,12 @@ export function ChatbotWidget() {
         provider: 'local',
       };
       setMessages(prev => [...prev, errorResponse]);
+      
+      toast({
+        title: "Erro",
+        description: "Não foi possível enviar a mensagem. Tente novamente.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
